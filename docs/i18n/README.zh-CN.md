@@ -53,7 +53,8 @@ cd opencode-win-guard
   "alsoWritable": [],
   "lowLabel": [],
   "env": {},
-  "language": "en"
+  "language": "en",
+  "killswitch": "on"
 }
 ```
 
@@ -69,6 +70,7 @@ cd opencode-win-guard
 | `lowLabel` | `[]` | 额外加上 Low 标签的文件夹，使沙箱中的程序可以在其中写入。路径可以以 `%APPDATA%`、`%LOCALAPPDATA%` 或其他环境变量开头。适用于在项目中构建的程序的数据文件夹：这样的程序以降低的权限运行（你自己启动它时也是如此），如果无法写入其设置或存档，就可能出错。不存在的文件夹会被创建。 |
 | `env` | `{}` | 为沙箱中的命令额外设置的环境变量，例如 `{ "CARGO_HOME": "${cache}/cargo" }`。`${cache}` 是项目的缓存文件夹，`${folder}` 是项目文件夹。沙箱已经把 npm、yarn、pnpm、bun、pip、uv、Poetry、Go、Gradle、NuGet 和 .NET 的缓存，以及 `TEMP`、`APPDATA` 和 `LOCALAPPDATA` 移到那里。 |
 | `language` | `"en"` | 停止说明的语言：`"en"`、`"zh-CN"`、`"ja"`、`"ko"`、`"es"`、`"pt-BR"`、`"de"`、`"fr"` 或 `"ru"`。欢迎添加更多语言，参见 [CONTRIBUTING.md](../../CONTRIBUTING.md#translations)。 |
+| `killswitch` | `"on"` | 设为 `"watch"` 可以先试用这些检查：命令和文件内容不会被拒绝，也不会停止代理，日志只记录本来会发生什么（由 `doctor.ps1` 统计）。用 `read`、`grep` 或 `webfetch` 读取 `secrets.txt` 中的文件，以及 `STOP` 文件，仍会停止代理，沙箱也照常工作。其他任何值都视为开启。 |
 
 损坏的设置文件不会关闭防护：shell 会被拒绝，日志会说明原因。
 
@@ -78,6 +80,15 @@ cd opencode-win-guard
 - 被拒绝的工具调用会返回 `Blocked: ...` 及原因；Windows 的拒绝在 shell 中显示为“Access denied”（拒绝访问）。
 - 启动器退出码：**125** 表示限制或 `STOP` 终止或阻止了命令，**126** 表示命令未启动（沙箱不完整）。命令绝不会改为以完整权限运行。
 - 紧急停止之后，每次调用都会以 `EMERGENCY STOP: <reason>` 失败，代理会被中断（主代理优先），项目中的 `AGENT_STOPPED.txt` 会说明发生了什么。如果你创建了 `STOP` 文件，请删除它，然后在该文件夹的某个会话中发送任意一条消息。
+
+## 检查安装
+
+```powershell
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1"
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1" -Why "npm test"
+```
+
+它检查插件、启动器和设置是否就位，文件夹及其缓存是否带有 Low 标签，并通过启动器运行一条真实命令：该命令必须以 Low 完整性运行，可以写入缓存，但不能写入其他位置，也不能读取已封锁的文件。它还会显示代理是否处于停止状态，以及日志中最近的拒绝和停止；在 watch 模式下，它会统计本来会被拒绝的内容。请在项目文件夹中运行，或指定 `-Folder`。加上 `-Why "<命令>"` 时，它会在代理运行之前告诉你插件会如何处理该命令（需要 Node.js）。它不做任何修改，出现问题时以退出码 1 结束。
 
 ## 自己停止代理
 

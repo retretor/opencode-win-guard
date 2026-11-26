@@ -25,6 +25,7 @@ It is not a wall against code written to escape. Treat it as a seat belt, not as
 8. **Labels persist.** The project folder and the `lowLabel` folders keep their Low label after the session; programs built there also run with lowered rights when you start them yourself. `uninstall.ps1` resets the labels it set.
 9. **Limits are approximate.** Memory is capped for the job; disk and folder size are polled, so a fast writer can pass a limit by a little before it is ended.
 10. **The text checks have false positives and negatives.** A refused harmless command can be done another way or left as a step for you; a harmful one in disguise may pass the text check (and then meets the sandbox).
+11. **Watch mode turns the text checks into log lines.** With `"killswitch": "watch"` no command, script or file text is refused and nothing but a file `STOP` or a file of `secrets.txt` opened with `read`, `grep` or `webfetch` stops the agents: uploads, downloaded scripts, harmful commands outside the reach of the sandbox (Credential Manager, the network) run. The sandbox, the closed files and the limits work as usual. Use it for a trial on work you watch, then switch it off.
 
 ## Reporting a problem
 

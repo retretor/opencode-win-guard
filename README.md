@@ -54,7 +54,8 @@ Run `install.ps1` again to update; to remove everything, `uninstall.ps1` (`-Remo
   "alsoWritable": [],
   "lowLabel": [],
   "env": {},
-  "language": "en"
+  "language": "en",
+  "killswitch": "on"
 }
 ```
 
@@ -70,6 +71,7 @@ Run `install.ps1` again to update; to remove everything, `uninstall.ps1` (`-Remo
 | `lowLabel` | `[]` | More folders that get the Low label, so that sandboxed programs can write there. Paths may start with `%APPDATA%`, `%LOCALAPPDATA%` or another environment variable. Useful for the data folder of a program built in the project: such a program runs with lowered rights (also when you start it yourself) and may fail if it cannot write its settings or saves. A missing folder is created. |
 | `env` | `{}` | More environment variables for sandboxed commands, e.g. `{ "CARGO_HOME": "${cache}/cargo" }`. `${cache}` is the cache folder of the project, `${folder}` the project folder. The sandbox already moves the caches of npm, yarn, pnpm, bun, pip, uv, Poetry, Go, Gradle, NuGet and .NET there, and `TEMP`, `APPDATA` and `LOCALAPPDATA`. |
 | `language` | `"en"` | Language of the stop note: `"en"`, `"zh-CN"`, `"ja"`, `"ko"`, `"es"`, `"pt-BR"`, `"de"`, `"fr"` or `"ru"`. More are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md#translations). |
+| `killswitch` | `"on"` | `"watch"` to try the checks first: commands and file texts are not refused and do not stop the agents, the log only says what would have been (`doctor.ps1` counts it). Reading a file of `secrets.txt` with `read`, `grep` or `webfetch`, and a file `STOP`, still stop them, and the sandbox works as usual. Any other value means on. |
 
 A broken settings file does not switch the guard off: the shell is refused and the log says why.
 
@@ -79,6 +81,15 @@ A broken settings file does not switch the guard off: the shell is refused and t
 - A refused tool call returns `Blocked: ...` with the reason; Windows refusals show up as "Access denied" in the shell.
 - Launcher exit codes: **125** a limit or `STOP` ended or prevented the command, **126** the command was not started (sandbox incomplete). The command never runs with full rights instead.
 - After an emergency stop every call fails with `EMERGENCY STOP: <reason>`, the agents are interrupted (the leads first), and `AGENT_STOPPED.txt` in the project says what happened. Delete the file `STOP` if you created one, then write any message in a session of the folder.
+
+## Check the setup
+
+```powershell
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1"
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1" -Why "npm test"
+```
+
+It checks that the plugins, the launcher and the settings are in place and that the folder and its cache carry the Low label, and it runs a real command through the launcher: the command must run at Low integrity, may write to the cache, and may neither write elsewhere nor read a closed file. It also says whether the agents are stopped and shows the last refusals and stops from the log; in watch mode it counts what would have been refused. Run it in the project folder, or give `-Folder`. With `-Why "<command>"` it says what the plugins would do with a command before an agent runs it (this needs Node.js). It changes nothing, and exits with 1 when something is broken.
 
 ## Stop the agents yourself
 

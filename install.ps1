@@ -6,7 +6,7 @@
   - builds the launcher with the C# compiler of the .NET Framework that comes with Windows (no SDK needed)
   - copies Git for Windows into the sandbox folder (Git Bash starts at Low integrity only from a copy of its own); skip with -NoGit
   - copies secrets.example.txt to secrets.txt and win-guard.example.json to win-guard.json if they are missing
-  - copies the plugins into the plugin folder of opencode
+  - copies the plugins into the plugin folder of opencode, and doctor.ps1 into the sandbox folder
   - closes the files of secrets.txt (protect.exe --apply)
   Nothing needs administrator rights. Run it again to update; your secrets.txt and win-guard.json are kept.
   Stop opencode (or at least every agent command) before you run it.
@@ -37,6 +37,7 @@ New-Item -ItemType Directory -Force (Join-Path $SandboxHome "bin"), (Join-Path $
 & cmd.exe /c "`"$here\launcher\build.cmd`" `"$SandboxHome\bin`""
 if ($LASTEXITCODE -ne 0) { throw "building the launcher failed" }
 Copy-Item "$here\launcher\bashenv.sh" (Join-Path $SandboxHome "bashenv.sh") -Force
+Copy-Item "$here\doctor.ps1" (Join-Path $SandboxHome "doctor.ps1") -Force
 
 # 2. Git copy
 $gitCopy = Join-Path $SandboxHome "git"
@@ -84,3 +85,4 @@ Write-Host "closed: $(@($out | Where-Object { $_ -like 'closed*' }).Count) files
 Write-Host ""
 Write-Host "Done. Restart opencode. The log is in ~\.local\share\opencode\log\win-guard.log; it says 'on for <folder>' when a session starts in a listed folder."
 Write-Host "Check what is closed:  & `"$protect`" --list"
+Write-Host "Check the whole setup, after a first session in the folder:  & `"$(Join-Path $SandboxHome 'doctor.ps1')`""

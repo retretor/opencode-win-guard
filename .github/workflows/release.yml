@@ -31,7 +31,7 @@ jobs:
         run: |
           awk -v v="${GITHUB_REF_NAME#v}" 'index($0, "## " v) == 1 {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
           name="opencode-win-guard-${GITHUB_REF_NAME#v}"
-          git archive --format=zip --prefix="$name/" -o "$name.zip" HEAD plugins launcher install.ps1 uninstall.ps1 secrets.example.txt win-guard.example.json README.md SECURITY.md LICENSE CHANGELOG.md docs
+          git archive --format=zip --prefix="$name/" -o "$name.zip" HEAD plugins launcher install.ps1 uninstall.ps1 doctor.ps1 secrets.example.txt win-guard.example.json README.md SECURITY.md LICENSE CHANGELOG.md docs
           sha256sum "$name.zip" > "$name.zip.sha256"
       - name: GitHub release
         shell: bash

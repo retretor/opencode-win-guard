@@ -53,7 +53,8 @@ Führe `install.ps1` erneut aus, um zu aktualisieren; um alles zu entfernen, `un
   "alsoWritable": [],
   "lowLabel": [],
   "env": {},
-  "language": "en"
+  "language": "en",
+  "killswitch": "on"
 }
 ```
 
@@ -69,6 +70,7 @@ Führe `install.ps1` erneut aus, um zu aktualisieren; um alles zu entfernen, `un
 | `lowLabel` | `[]` | Weitere Ordner, die das Low-Label bekommen, damit Programme in der Sandbox dort schreiben können. Pfade dürfen mit `%APPDATA%`, `%LOCALAPPDATA%` oder einer anderen Umgebungsvariable beginnen. Nützlich für den Datenordner eines Programms, das im Projekt gebaut wird: Ein solches Programm läuft mit herabgesetzten Rechten (auch wenn du es selbst startest) und kann fehlschlagen, wenn es seine Einstellungen oder Speicherstände nicht schreiben kann. Ein fehlender Ordner wird angelegt. |
 | `env` | `{}` | Weitere Umgebungsvariablen für Befehle in der Sandbox, z. B. `{ "CARGO_HOME": "${cache}/cargo" }`. `${cache}` ist der Cache-Ordner des Projekts, `${folder}` der Projektordner. Die Sandbox verlegt bereits die Caches von npm, yarn, pnpm, bun, pip, uv, Poetry, Go, Gradle, NuGet und .NET dorthin, außerdem `TEMP`, `APPDATA` und `LOCALAPPDATA`. |
 | `language` | `"en"` | Sprache des Hinweises bei einem Stopp: `"en"`, `"zh-CN"`, `"ja"`, `"ko"`, `"es"`, `"pt-BR"`, `"de"`, `"fr"` oder `"ru"`. Weitere sind willkommen, siehe [CONTRIBUTING.md](../../CONTRIBUTING.md#translations). |
+| `killswitch` | `"on"` | `"watch"`, um die Prüfungen erst auszuprobieren: Befehle und Dateitexte werden nicht abgelehnt und stoppen die Agenten nicht, das Log sagt nur, was passiert wäre (`doctor.ps1` zählt es). Das Lesen einer Datei aus `secrets.txt` mit `read`, `grep` oder `webfetch` und eine Datei `STOP` stoppen sie weiterhin, und die Sandbox arbeitet wie gewohnt. Jeder andere Wert bedeutet an. |
 
 Eine fehlerhafte Einstellungsdatei schaltet den Schutz nicht ab: Die Shell wird abgelehnt, und das Log sagt, warum.
 
@@ -78,6 +80,15 @@ Eine fehlerhafte Einstellungsdatei schaltet den Schutz nicht ab: Die Shell wird 
 - Ein abgelehnter Tool-Aufruf gibt `Blocked: ...` mit dem Grund zurück; Ablehnungen durch Windows erscheinen in der Shell als „Access denied“.
 - Exit-Codes des Launchers: **125** ein Limit oder `STOP` hat den Befehl beendet oder verhindert, **126** der Befehl wurde nicht gestartet (Sandbox unvollständig). Ersatzweise mit vollen Rechten läuft der Befehl nie.
 - Nach einem Not-Aus schlägt jeder Aufruf mit `EMERGENCY STOP: <reason>` fehl, die Agenten werden unterbrochen (die Hauptagenten zuerst), und `AGENT_STOPPED.txt` im Projekt beschreibt, was passiert ist. Lösche die Datei `STOP`, falls du eine angelegt hast, und schreib dann irgendeine Nachricht in einer Sitzung des Ordners.
+
+## Die Einrichtung prüfen
+
+```powershell
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1"
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1" -Why "npm test"
+```
+
+Es prüft, ob Plugins, Launcher und Einstellungen vorhanden sind und ob der Ordner und sein Cache das Low-Label tragen, und führt einen echten Befehl über den Launcher aus: Er muss mit Low-Integrität laufen, darf in den Cache schreiben, aber weder anderswo schreiben noch eine geschlossene Datei lesen. Außerdem zeigt es, ob die Agenten gestoppt sind, und die letzten Ablehnungen und Stopps aus dem Log; im Beobachtungsmodus zählt es, was abgelehnt worden wäre. Führe es im Projektordner aus oder gib `-Folder` an. Mit `-Why "<Befehl>"` sagt es, was die Plugins mit einem Befehl tun würden, bevor ein Agent ihn ausführt (dafür wird Node.js gebraucht). Es ändert nichts und endet mit Code 1, wenn etwas nicht stimmt.
 
 ## Die Agenten selbst stoppen
 

@@ -53,7 +53,8 @@ cd opencode-win-guard
   "alsoWritable": [],
   "lowLabel": [],
   "env": {},
-  "language": "en"
+  "language": "en",
+  "killswitch": "on"
 }
 ```
 
@@ -69,6 +70,7 @@ cd opencode-win-guard
 | `lowLabel` | `[]` | Low 레이블을 붙여 샌드박스 안의 프로그램이 쓸 수 있게 할 추가 폴더. 경로는 `%APPDATA%`, `%LOCALAPPDATA%` 또는 다른 환경 변수로 시작할 수 있습니다. 프로젝트에서 빌드한 프로그램의 데이터 폴더에 유용합니다: 그런 프로그램은 낮춰진 권한으로 실행되며(사용자가 직접 시작해도 마찬가지), 설정이나 저장 파일을 쓰지 못하면 실패할 수 있습니다. 없는 폴더는 생성됩니다. |
 | `env` | `{}` | 샌드박스 안의 명령에 줄 추가 환경 변수. 예: `{ "CARGO_HOME": "${cache}/cargo" }`. `${cache}`는 프로젝트의 캐시 폴더, `${folder}`는 프로젝트 폴더입니다. 샌드박스는 이미 npm, yarn, pnpm, bun, pip, uv, Poetry, Go, Gradle, NuGet, .NET의 캐시와 `TEMP`, `APPDATA`, `LOCALAPPDATA`를 그곳으로 옮겨 둡니다. |
 | `language` | `"en"` | 정지 안내문의 언어: `"en"`, `"zh-CN"`, `"ja"`, `"ko"`, `"es"`, `"pt-BR"`, `"de"`, `"fr"` 또는 `"ru"`. 다른 언어도 환영합니다. [CONTRIBUTING.md](../../CONTRIBUTING.md#translations)를 참고하세요. |
+| `killswitch` | `"on"` | `"watch"`로 두면 검사를 먼저 시험해 볼 수 있습니다. 명령과 파일 내용은 거부되지 않고 에이전트도 정지하지 않으며, 로그에는 원래 어떻게 되었을지만 기록됩니다(`doctor.ps1`이 집계합니다). `read`, `grep`, `webfetch`로 `secrets.txt`의 파일을 읽는 것과 `STOP` 파일은 여전히 에이전트를 정지시키고, 샌드박스는 평소대로 동작합니다. 그 밖의 값은 모두 켜짐으로 취급합니다. |
 
 설정 파일이 손상되어도 보호 기능이 꺼지지 않습니다: 셸이 거부되고, 로그에 그 이유가 남습니다.
 
@@ -78,6 +80,15 @@ cd opencode-win-guard
 - 거부된 도구 호출은 이유와 함께 `Blocked: ...`를 반환합니다. Windows의 거부는 셸에서 "Access denied"로 나타납니다.
 - 런처 종료 코드: **125** 제한이나 `STOP` 때문에 명령이 종료되었거나 실행되지 못함, **126** 명령이 시작되지 않음(샌드박스가 불완전함). 그 대신 명령이 전체 권한으로 실행되는 일은 결코 없습니다.
 - 비상 정지 후에는 모든 호출이 `EMERGENCY STOP: <reason>`으로 실패하고, 에이전트는 중단되며(리드부터 먼저), 프로젝트의 `AGENT_STOPPED.txt`에 무슨 일이 있었는지 적힙니다. `STOP` 파일을 만들었다면 삭제한 다음, 해당 폴더의 세션에 아무 메시지나 쓰세요.
+
+## 설정 점검
+
+```powershell
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1"
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1" -Why "npm test"
+```
+
+플러그인, 런처, 설정이 제자리에 있는지, 폴더와 그 캐시에 Low 레이블이 붙어 있는지 확인하고, 런처를 통해 실제 명령을 하나 실행합니다. 이 명령은 Low 무결성으로 실행되어야 하며, 캐시에는 쓸 수 있지만 다른 곳에 쓰거나 닫힌 파일을 읽을 수는 없어야 합니다. 에이전트가 정지 상태인지와 로그의 최근 거부 및 정지도 보여 주며, watch 모드에서는 거부되었을 항목을 집계합니다. 프로젝트 폴더에서 실행하거나 `-Folder`를 지정하세요. `-Why "<명령>"`을 주면 에이전트가 실행하기 전에 플러그인이 그 명령을 어떻게 처리할지 알려 줍니다(Node.js 필요). 아무것도 바꾸지 않으며, 문제가 있으면 종료 코드 1로 끝납니다.
 
 ## 직접 에이전트 정지하기
 

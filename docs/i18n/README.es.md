@@ -53,7 +53,8 @@ Vuelve a ejecutar `install.ps1` para actualizar; para quitarlo todo, `uninstall.
   "alsoWritable": [],
   "lowLabel": [],
   "env": {},
-  "language": "en"
+  "language": "en",
+  "killswitch": "on"
 }
 ```
 
@@ -69,6 +70,7 @@ Vuelve a ejecutar `install.ps1` para actualizar; para quitarlo todo, `uninstall.
 | `lowLabel` | `[]` | Carpetas adicionales que reciben la etiqueta Low, para que los programas del sandbox puedan escribir en ellas. Las rutas pueden empezar con `%APPDATA%`, `%LOCALAPPDATA%` u otra variable de entorno. Útil para la carpeta de datos de un programa compilado en el proyecto: ese programa se ejecuta con derechos reducidos (también cuando lo inicias tú) y puede fallar si no puede escribir sus ajustes o partidas guardadas. Si la carpeta no existe, se crea. |
 | `env` | `{}` | Variables de entorno adicionales para los comandos del sandbox, p. ej. `{ "CARGO_HOME": "${cache}/cargo" }`. `${cache}` es la carpeta de caché del proyecto y `${folder}`, la carpeta del proyecto. El sandbox ya traslada allí las cachés de npm, yarn, pnpm, bun, pip, uv, Poetry, Go, Gradle, NuGet y .NET, además de `TEMP`, `APPDATA` y `LOCALAPPDATA`. |
 | `language` | `"en"` | Idioma de la nota de parada: `"en"`, `"zh-CN"`, `"ja"`, `"ko"`, `"es"`, `"pt-BR"`, `"de"`, `"fr"` o `"ru"`. Se agradecen más idiomas, consulta [CONTRIBUTING.md](../../CONTRIBUTING.md#translations). |
+| `killswitch` | `"on"` | `"watch"` para probar primero las comprobaciones: los comandos y los textos de archivos no se rechazan ni detienen a los agentes; el log solo dice lo que habría pasado (`doctor.ps1` lo cuenta). Leer un archivo de `secrets.txt` con `read`, `grep` o `webfetch`, y un archivo `STOP`, siguen deteniéndolos, y el sandbox funciona como siempre. Cualquier otro valor significa activado. |
 
 Un archivo de ajustes dañado no desactiva la protección: el shell se rechaza y el registro indica por qué.
 
@@ -78,6 +80,15 @@ Un archivo de ajustes dañado no desactiva la protección: el shell se rechaza y
 - Una llamada a herramienta rechazada devuelve `Blocked: ...` con el motivo; los rechazos de Windows aparecen en el shell como "Access denied".
 - Códigos de salida del launcher: **125**: un límite o `STOP` terminó o impidió el comando; **126**: el comando no se inició (sandbox incompleto). En ningún caso el comando se ejecuta con todos los derechos en su lugar.
 - Tras una parada de emergencia, toda llamada falla con `EMERGENCY STOP: <reason>`, los agentes se interrumpen (primero los líderes) y `AGENT_STOPPED.txt` en el proyecto explica qué pasó. Elimina el archivo `STOP` si lo creaste y luego escribe cualquier mensaje en una sesión de la carpeta.
+
+## Comprobar la instalación
+
+```powershell
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1"
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1" -Why "npm test"
+```
+
+Comprueba que los plugins, el launcher y los ajustes están en su sitio y que la carpeta y su caché llevan la etiqueta Low, y ejecuta un comando real a través del launcher: debe correr con integridad Low, puede escribir en la caché y no puede escribir en otro sitio ni leer un archivo cerrado. También dice si los agentes están detenidos y muestra los últimos rechazos y paradas del log; en modo watch cuenta lo que se habría rechazado. Ejecútalo en la carpeta del proyecto o indica `-Folder`. Con `-Why "<comando>"` dice qué harían los plugins con un comando antes de que un agente lo ejecute (necesita Node.js). No cambia nada y termina con el código 1 si algo está roto.
 
 ## Detener tú mismo a los agentes
 

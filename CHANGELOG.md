@@ -4,6 +4,9 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## Unreleased
 
+- `doctor.ps1` (installed into the sandbox folder): checks the installation, the Low labels, a real command through the launcher and the closed files; shows whether the agents are stopped and the last refusals; `-Why "<command>"` tells what the plugins would do with a command.
+- `"killswitch": "watch"`: the checks of commands and file texts only write what they would have done to the log, to try them on real work first. Reading a file of `secrets.txt` with `read`, `grep` or `webfetch`, and a file `STOP`, still stop the agents.
+
 - Fix: a folder setting of only a drive letter (`D:`) was not refused as a whole drive when the current folder was on that drive.
 - Demo GIF in the README; the link to opencode-sandbox points to the original repository instead of a fork.
 - README translations and the stop note in Simplified Chinese, Japanese, Korean, Spanish, Brazilian Portuguese, German and French (`language`: `zh-CN`, `ja`, `ko`, `es`, `pt-BR`, `de`, `fr`).

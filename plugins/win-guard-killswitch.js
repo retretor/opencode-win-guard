@@ -9,6 +9,9 @@
 //  While calls run: a file STOP in the project, or a large part of the project's files gone, stops the agents.
 //
 // A stop stays in force, also after a restart of OpenCode, until the user writes a message in a session of the folder.
+// With "killswitch": "watch" in the settings the checks of commands and file texts refuse and stop nothing: the log says what
+// would have been ("WATCH would stop/refuse ..."), so they can be tried on real work first. Still in force: a file STOP made by
+// the user, and read/list/edit/write/grep/webfetch of the files in secrets.txt (these tools run with full rights).
 // Text checks see what a command says, not what a compiled program does. That is what the sandbox is for. No network access.
 // Other plugins can see a stop: globalThis[Symbol.for("opencode-win-guard.halted")] is a Set of the stopped folders.
 import fs from "node:fs"
@@ -392,7 +395,7 @@ async function count(dir, limit = 50000) {
 }
 const lost = (most, now) => most - now >= 40 && now < most * 0.5
 
-const settings = { agents: "*", language: "en" }
+const settings = { agents: "*", language: "en", watch: false }
 function listed(here, file = LIST) {
   let conf
   try {
@@ -404,6 +407,8 @@ function listed(here, file = LIST) {
   if (!Array.isArray(conf.folders)) throw new Error('"folders" must be a list of absolute paths')
   if (conf.agents !== undefined) settings.agents = conf.agents === "*" ? "*" : [].concat(conf.agents).map(String)
   settings.language = Object.hasOwn(TRANSLATIONS, conf.language) ? conf.language : "en"
+  // Anything but "watch" means on: a typo must not switch the stop off.
+  settings.watch = conf.killswitch === "watch"
   const h = norm(here)
   return conf.folders.find((f) => inside(h, norm(String(f))))
 }
@@ -455,7 +460,9 @@ export default {
     let most = 0
     let mostAt = 0
     if (stopped) halted.add(norm(here))
-    log(broken ? `BROKEN (${broken}): agents refused` : stopped ? `still stopped: ${stopped.reason}` : "on", "for", root)
+    log(broken ? `BROKEN (${broken}): agents refused` : stopped ? `still stopped: ${stopped.reason}` : settings.watch ? "watching (nothing is refused or stopped)" : "on", "for", root)
+    // One word for "by" and "tool", so that doctor.ps1 can count the reasons.
+    const watched = (act, by, tool, why, text) => log(`WATCH would ${act}`, String(by || "-").replace(/\s+/g, "_"), tool || "-", why, JSON.stringify(String(text ?? "")).slice(0, 300))
 
     const message = () =>
       `EMERGENCY STOP: ${stopped.reason}. Every call is refused until the user writes a message. Do not try again or another way. End now with one short message to the user: what you were doing and why, and the line "STATUS: BLOCKED".`
@@ -471,8 +478,9 @@ export default {
           log("interrupt failed", id, e?.message || String(e))
         }
     }
-    const trip = (reason, detail, by) => {
+    const trip = (reason, detail, by, always = false) => {
       if (stopped) return
+      if (settings.watch && by !== "user" && !always) return watched("stop", by, "", reason, detail)
       stopped = { reason, detail: String(detail || "").slice(0, 2000), by, time: new Date().toISOString() }
       halted.add(norm(here))
       log("STOP", by || "", reason, JSON.stringify(stopped.detail).slice(0, 400))
@@ -530,10 +538,13 @@ export default {
       }
     })
 
-    const refuse = (event, v, text) => {
+    // `always`: also in watch mode. For tools that run inside OpenCode with full rights and name a file of secrets.txt
+    // exactly: the launcher does not stand behind them, and a listed path is not a guess.
+    const refuse = (event, v, text, always = false) => {
+      if (settings.watch && !always) return watched(v.act, event.agent, event.tool, v.why, text)
       log(v.act, event.agent, event.tool, v.why, JSON.stringify(text).slice(0, 300))
       if (v.act === "stop") {
-        trip(v.why, `${event.tool}: ${text}`, event.agent)
+        trip(v.why, `${event.tool}: ${text}`, event.agent, true)
         throw new Error(message())
       }
       // The refusal is counted below, together with those of the other guards.
@@ -556,9 +567,9 @@ export default {
         if (v) refuse(event, v, command)
       }
       const p = i.path ?? i.filePath ?? i.file_path
-      if (/^(?:read|list|edit|write)$/.test(event.tool) && p && isSecret(list, norm(at(String(p))))) refuse(event, { act: "stop", why: "it opens a file with keys or passwords" }, String(p))
-      if (event.tool === "grep" && holdsSecret(list, norm(at(String(p || "."))))) refuse(event, { act: "refuse", why: "the search would go through files with keys or passwords. Search in a narrower folder" }, String(p))
-      if (event.tool === "webfetch" && (/^\s*file:/i.test(String(i.url)) || verdict(String(i.url), list)?.act === "stop")) refuse(event, { act: "stop", why: "it opens a local file or OpenCode's own service through the web tool" }, String(i.url))
+      if (/^(?:read|list|edit|write)$/.test(event.tool) && p && isSecret(list, norm(at(String(p))))) refuse(event, { act: "stop", why: "it opens a file with keys or passwords" }, String(p), true)
+      if (event.tool === "grep" && holdsSecret(list, norm(at(String(p || "."))))) refuse(event, { act: "refuse", why: "the search would go through files with keys or passwords. Search in a narrower folder" }, String(p), true)
+      if (event.tool === "webfetch" && (/^\s*file:/i.test(String(i.url)) || verdict(String(i.url), list)?.act === "stop")) refuse(event, { act: "stop", why: "it opens a local file or OpenCode's own service through the web tool" }, String(i.url), true)
       if (/^(?:edit|write)$/.test(event.tool) && p && CODE.test(String(p))) {
         const v = verdict(String(i.content ?? i.newString ?? i.new_string ?? ""), list)
         if (v) refuse(event, { act: "refuse", why: `the text of the file is not allowed: ${v.why}` }, String(p))
@@ -595,8 +606,11 @@ export default {
         if (!running.size && most) return
         const n = await count(root)
         const now = Date.now()
-        if (lost(most, n)) return trip("a large part of the project's files is gone", `${most} files before, ${n} now`, [...running].length ? "a running command" : "")
-        if (n >= most || now - mostAt > 10 * 60 * 1000) {
+        if (lost(most, n)) {
+          trip("a large part of the project's files is gone", `${most} files before, ${n} now`, [...running].length ? "a running command" : "")
+          if (!settings.watch) return
+        }
+        if (n >= most || lost(most, n) || now - mostAt > 10 * 60 * 1000) {
           most = n
           mostAt = now
         }
