@@ -36,7 +36,7 @@ jobs:
       - name: The PowerShell scripts parse
         shell: powershell
         run: |
-          foreach ($f in "install.ps1", "uninstall.ps1") {
+          foreach ($f in "install.ps1", "uninstall.ps1", "doctor.ps1") {
             $e = $null
             [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f), [ref]$null, [ref]$e)
             if ($e.Count) { $e | ForEach-Object { Write-Error "$f $($_.Extent.StartLineNumber): $($_.Message)" }; exit 1 }

@@ -53,7 +53,8 @@ Relancez `install.ps1` pour mettre à jour ; pour tout supprimer, lancez `uninst
   "alsoWritable": [],
   "lowLabel": [],
   "env": {},
-  "language": "en"
+  "language": "en",
+  "killswitch": "on"
 }
 ```
 
@@ -69,6 +70,7 @@ Relancez `install.ps1` pour mettre à jour ; pour tout supprimer, lancez `uninst
 | `lowLabel` | `[]` | Dossiers supplémentaires qui reçoivent l'étiquette Low, afin que les programmes du bac à sable puissent y écrire. Les chemins peuvent commencer par `%APPDATA%`, `%LOCALAPPDATA%` ou une autre variable d'environnement. Utile pour le dossier de données d'un programme compilé dans le projet : un tel programme s'exécute avec des droits réduits (y compris quand vous le lancez vous-même) et peut échouer s'il ne peut pas écrire ses paramètres ou ses sauvegardes. Un dossier manquant est créé. |
 | `env` | `{}` | Variables d'environnement supplémentaires pour les commandes du bac à sable, par exemple `{ "CARGO_HOME": "${cache}/cargo" }`. `${cache}` est le dossier de cache du projet, `${folder}` le dossier du projet. Le bac à sable y déplace déjà les caches de npm, yarn, pnpm, bun, pip, uv, Poetry, Go, Gradle, NuGet et .NET, ainsi que `TEMP`, `APPDATA` et `LOCALAPPDATA`. |
 | `language` | `"en"` | Langue de la note d'arrêt : `"en"`, `"zh-CN"`, `"ja"`, `"ko"`, `"es"`, `"pt-BR"`, `"de"`, `"fr"` ou `"ru"`. D'autres langues sont les bienvenues, voir [CONTRIBUTING.md](../../CONTRIBUTING.md#translations). |
+| `killswitch` | `"on"` | `"watch"` pour essayer d'abord les vérifications : les commandes et les textes de fichiers ne sont pas refusés et n'arrêtent pas les agents, le log indique seulement ce qui se serait passé (`doctor.ps1` en fait le compte). Lire un fichier de `secrets.txt` avec `read`, `grep` ou `webfetch`, ainsi qu'un fichier `STOP`, arrêtent toujours les agents, et le bac à sable fonctionne comme d'habitude. Toute autre valeur signifie activé. |
 
 Un fichier de paramètres invalide ne désactive pas la protection : le shell est refusé et le journal indique pourquoi.
 
@@ -78,6 +80,15 @@ Un fichier de paramètres invalide ne désactive pas la protection : le shell es
 - Un appel d'outil refusé renvoie `Blocked: ...` avec la raison ; les refus de Windows apparaissent dans le shell sous la forme « Access denied ».
 - Codes de sortie du lanceur : **125** une limite ou `STOP` a terminé ou empêché la commande, **126** la commande n'a pas été lancée (bac à sable incomplet). La commande ne s'exécute jamais à la place avec tous les droits.
 - Après un arrêt d'urgence, chaque appel échoue avec `EMERGENCY STOP: <reason>`, les agents sont interrompus (les agents principaux d'abord), et `AGENT_STOPPED.txt` dans le projet explique ce qui s'est passé. Supprimez le fichier `STOP` si vous en avez créé un, puis écrivez n'importe quel message dans une session du dossier.
+
+## Vérifier l'installation
+
+```powershell
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1"
+& "$HOME\.local\share\opencode\sandbox\doctor.ps1" -Why "npm test"
+```
+
+Il vérifie que les plugins, le lanceur et les paramètres sont en place et que le dossier et son cache portent l'étiquette Low, puis lance une vraie commande via le lanceur : elle doit tourner en intégrité Low, peut écrire dans le cache, mais ne peut ni écrire ailleurs ni lire un fichier fermé. Il indique aussi si les agents sont arrêtés et affiche les derniers refus et arrêts du log ; en mode watch, il compte ce qui aurait été refusé. Lancez-le dans le dossier du projet ou indiquez `-Folder`. Avec `-Why "<commande>"`, il dit ce que les plugins feraient d'une commande avant qu'un agent ne la lance (nécessite Node.js). Il ne modifie rien et se termine avec le code 1 si quelque chose ne va pas.
 
 ## Arrêter les agents vous-même
 
