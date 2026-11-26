@@ -1,0 +1,36 @@
+{
+  "name": "opencode-win-guard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "opencode plugins for Windows: a write sandbox enforced by Windows integrity levels, closed secret files, resource limits and an emergency stop for unattended agents",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/unit.test.mjs",
+    "test:e2e": "node --test test/unit.test.mjs test/launcher.e2e.test.mjs test/plugins.e2e.test.mjs"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "sandbox",
+    "windows",
+    "killswitch",
+    "agents",
+    "security"
+  ],
+  "os": [
+    "win32"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/retretor/opencode-win-guard.git"
+  },
+  "homepage": "https://github.com/retretor/opencode-win-guard#readme",
+  "bugs": {
+    "url": "https://github.com/retretor/opencode-win-guard/issues"
+  },
+  "author": "retretor"
+}
