@@ -34,6 +34,6 @@ body:
     id: versions
     attributes:
       label: Versions
-      placeholder: "Windows 11 24H2, opencode 2.2.3, opencode-win-guard 0.1.0, with bash (Git copy) / without"
+      placeholder: "Windows 11 24H2, opencode 2.2.3, opencode-win-guard 0.2.0, with bash (Git copy) / without"
     validations:
       required: true
