@@ -1,6 +1,6 @@
 {
   "name": "opencode-win-guard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "opencode plugins for Windows: a write sandbox enforced by Windows integrity levels, closed secret files, resource limits and an emergency stop for unattended agents",
   "type": "module",
