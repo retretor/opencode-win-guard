@@ -25,7 +25,7 @@ test("sandbox: commands that name another drive or settings that run programs", 
   assert.match(sb.shellVerdict("notepad opencode.json", []), /OpenCode's own settings/)
 })
 
-test("sandbox: folders that may never be opened for writing", () => {
+test("sandbox: folders that may never be opened for writing", { skip: process.platform !== "win32" && "Windows paths" }, () => {
   assert.match(sb.unsafe("C:\\"), /whole drive/)
   assert.match(sb.unsafe("D:"), /whole drive/)
   assert.match(sb.unsafe(os.homedir()), /contains/)
@@ -72,7 +72,8 @@ test("sandbox: links are resolved before a path is checked", { skip: process.pla
   fs.mkdirSync(out)
   fs.mkdirSync(path.join(d, "proj"))
   fs.symlinkSync(out, path.join(d, "proj", "link"), "junction")
-  assert.equal(sb.norm(sb.real(path.join(d, "proj", "link", "new.txt"))), sb.norm(path.join(out, "new.txt")))
+  // the real name of `out`: the temporary folder may be given as a short 8.3 name (C:\Users\RUNNER~1\...)
+  assert.equal(sb.norm(sb.real(path.join(d, "proj", "link", "new.txt"))), sb.norm(path.join(fs.realpathSync.native(out), "new.txt")))
   fs.rmSync(d, { recursive: true, force: true })
 })
 
@@ -136,7 +137,7 @@ test("killswitch: ordinary work passes", () => {
   for (const c of FINE) assert.equal(ks.verdict(c), undefined, c)
 })
 
-test("killswitch: deleting the whole project, and scripts of the project that a command starts", () => {
+test("killswitch: deleting the whole project, and scripts of the project that a command starts", { skip: process.platform !== "win32" && "Windows paths" }, () => {
   const root = tmp()
   assert.equal(ks.check(`rm -rf ${root.replaceAll("\\", "/")}`, root, root)?.why, "it deletes the whole project")
   assert.equal(ks.check(`Remove-Item -Recurse -Force "${root}"`, root, root)?.why, "it deletes the whole project")

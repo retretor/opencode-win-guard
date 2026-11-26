@@ -101,6 +101,8 @@ function real(p) {
 
 // A folder that holds the user's whole profile, a drive or the system must never be opened.
 function unsafe(root) {
+  // "D:" alone means the current folder of drive D to Windows, but here it can only mean the drive.
+  if (/^[a-z]:[\\/]*$/i.test(String(root).trim())) return "it is a whole drive"
   const r = norm(root)
   if (/^[a-z]:$/.test(r) || /^[a-z]:\/$/.test(r)) return "it is a whole drive"
   const keep = [os.homedir(), CONFIG, DATA, HOME, SYSTEM32, process.env.APPDATA, process.env.LOCALAPPDATA, process.env.ProgramFiles, process.env.ProgramData]
