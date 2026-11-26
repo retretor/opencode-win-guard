@@ -6,6 +6,7 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 - Fix: a folder setting of only a drive letter (`D:`) was not refused as a whole drive when the current folder was on that drive.
 - Demo GIF in the README; the link to opencode-sandbox points to the original repository instead of a fork.
+- README translations and the stop note in Simplified Chinese, Japanese, Korean, Spanish, Brazilian Portuguese, German and French (`language`: `zh-CN`, `ja`, `ko`, `es`, `pt-BR`, `de`, `fr`).
 
 ## 0.1.0 - 2026-11-26
 
