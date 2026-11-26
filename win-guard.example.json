@@ -1,0 +1,10 @@
+{
+  "folders": ["C:\\Users\\you\\Projects\\my-project"],
+  "limits": { "ramFreeGB": 4, "diskFreeGB": 15, "folderGB": 15 },
+  "agents": "*",
+  "extraTools": [],
+  "alsoWritable": [],
+  "lowLabel": [],
+  "env": {},
+  "language": "en"
+}
