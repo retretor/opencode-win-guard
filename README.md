@@ -3,7 +3,7 @@
 [![CI](https://github.com/retretor/opencode-win-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/retretor/opencode-win-guard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**English** · [Русский](docs/i18n/README.ru.md)
+**English** · [简体中文](docs/i18n/README.zh-CN.md) · [日本語](docs/i18n/README.ja.md) · [한국어](docs/i18n/README.ko.md) · [Español](docs/i18n/README.es.md) · [Português (Brasil)](docs/i18n/README.pt-BR.md) · [Deutsch](docs/i18n/README.de.md) · [Français](docs/i18n/README.fr.md) · [Русский](docs/i18n/README.ru.md)
 
 A write sandbox and an emergency stop for [opencode](https://opencode.ai) agents on **Windows**, for letting agents work unattended in a project folder. No administrator rights, no Docker, no WSL, no network access.
 
@@ -69,7 +69,7 @@ Run `install.ps1` again to update; to remove everything, `uninstall.ps1` (`-Remo
 | `alsoWritable` | `[]` | More folders that `edit` and `write` may change (not the shell). |
 | `lowLabel` | `[]` | More folders that get the Low label, so that sandboxed programs can write there. Paths may start with `%APPDATA%`, `%LOCALAPPDATA%` or another environment variable. Useful for the data folder of a program built in the project: such a program runs with lowered rights (also when you start it yourself) and may fail if it cannot write its settings or saves. A missing folder is created. |
 | `env` | `{}` | More environment variables for sandboxed commands, e.g. `{ "CARGO_HOME": "${cache}/cargo" }`. `${cache}` is the cache folder of the project, `${folder}` the project folder. The sandbox already moves the caches of npm, yarn, pnpm, bun, pip, uv, Poetry, Go, Gradle, NuGet and .NET there, and `TEMP`, `APPDATA` and `LOCALAPPDATA`. |
-| `language` | `"en"` | Language of the stop note: `"en"` or `"ru"`. More are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md#translations). |
+| `language` | `"en"` | Language of the stop note: `"en"`, `"zh-CN"`, `"ja"`, `"ko"`, `"es"`, `"pt-BR"`, `"de"`, `"fr"` or `"ru"`. More are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md#translations). |
 
 A broken settings file does not switch the guard off: the shell is refused and the log says why.
 

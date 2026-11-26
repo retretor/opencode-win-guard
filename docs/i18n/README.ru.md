@@ -1,6 +1,6 @@
 # opencode-win-guard
 
-[English](../../README.md) · **Русский**
+[English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Português (Brasil)](README.pt-BR.md) · [Deutsch](README.de.md) · [Français](README.fr.md) · **Русский**
 
 > Перевод. Основной документ — [README на английском](../../README.md); при расхождении верен он.
 
@@ -51,7 +51,7 @@ cd opencode-win-guard
 - `alsoWritable`: дополнительные папки для `edit` и `write`;
 - `lowLabel`: дополнительные папки с меткой Low, куда смогут писать программы из песочницы, например папка данных программы, собранной в проекте; пути могут начинаться с `%APPDATA%` и других переменных;
 - `env`: дополнительные переменные окружения для команд; `${cache}` — папка кэша проекта, `${folder}` — папка проекта;
-- `language`: язык записки об остановке, `"en"` или `"ru"`.
+- `language`: язык записки об остановке: `"en"`, `"zh-CN"`, `"ja"`, `"ko"`, `"es"`, `"pt-BR"`, `"de"`, `"fr"` или `"ru"`.
 
 ## Остановить агентов самому
 
