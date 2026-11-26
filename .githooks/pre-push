@@ -1,0 +1,11 @@
+#!/bin/sh
+# Local branch rules: no direct pushes to main (the first push of a new repository is allowed), and the unit tests
+# must pass. ALLOW_MAIN=1 overrides the first rule, for emergencies.
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ] && [ "$remote_sha" != "$zero" ] && [ "$ALLOW_MAIN" != "1" ]; then
+    echo "pre-push: main changes only through pull requests. Push a branch:  git push -u origin HEAD" >&2
+    exit 1
+  fi
+done
+npm test --silent || { echo "pre-push: the unit tests fail" >&2; exit 1; }

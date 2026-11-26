@@ -1,0 +1,39 @@
+name: Bug report
+description: Something does not work as described, or a harmless command is stopped or refused
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "A way around the sandbox or the secret files is a vulnerability: please report it privately (see SECURITY.md), not here."
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      options:
+        - A harmless command was stopped or refused (false positive)
+        - Installing or uninstalling fails
+        - The shell is refused / the sandbox reports BROKEN
+        - A build or tool fails inside the sandbox
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: For a false stop, the exact command or tool call.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Lines of win-guard.log
+      description: From ~\.local\share\opencode\log\win-guard.log. Remove your user name and other private paths first.
+      render: text
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      placeholder: "Windows 11 24H2, opencode 2.2.3, opencode-win-guard 0.1.0, with bash (Git copy) / without"
+    validations:
+      required: true

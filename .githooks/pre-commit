@@ -1,0 +1,16 @@
+#!/bin/sh
+# Local branch rules (enable once per clone: git config core.hooksPath .githooks).
+# Work happens on branches; main changes only through pull requests. ALLOW_MAIN=1 overrides, for emergencies.
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ "$branch" = "main" ] && git rev-parse -q --verify HEAD >/dev/null && [ "$ALLOW_MAIN" != "1" ]; then
+  echo "pre-commit: do not commit on main. Make a branch first:  git switch -c fix/short-name" >&2
+  exit 1
+fi
+# Optional: refuse an author address that is not GitHub's private one (git config hooks.requireNoreply true).
+if [ "$(git config --bool hooks.requireNoreply)" = "true" ]; then
+  case "$(git config user.email)" in
+    *@users.noreply.github.com) ;;
+    *) echo "pre-commit: user.email is not a ...@users.noreply.github.com address; set it with  git config user.email <id+name>@users.noreply.github.com" >&2; exit 1 ;;
+  esac
+fi
+exit 0
