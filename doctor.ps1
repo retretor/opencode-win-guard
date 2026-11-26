@@ -167,7 +167,7 @@ foreach ($root in $targets) {
     $inCache = Join-Path $cache "doctor-probe-$PID.txt"
     $whoami = Join-Path $env:SystemRoot "System32\whoami.exe"
     $lines = @(
-      "try { `$g = & '$whoami' /groups /fo csv | Select-String 'S-1-16-\d+'; 'level: ' + `$g.Matches[0].Value } catch { 'level: unknown' }",
+      "try { `$w = & '$whoami' /groups /fo csv 2>&1 | Out-String; if (`$w -match 'S-1-16-\d+') { 'level: ' + `$Matches[0] } else { 'level: unknown (' + `$w.Trim() + ')' } } catch { 'level: unknown (' + `$_ + ')' }",
       "try { [IO.File]::WriteAllText('$inCache', 'x'); Remove-Item '$inCache'; 'cache: wrote' } catch { 'cache: denied' }",
       "try { [IO.File]::WriteAllText('$probe', 'x'); 'outside: WROTE' } catch { 'outside: denied' }"
     )
@@ -182,7 +182,10 @@ foreach ($root in $targets) {
     if (Test-Path $probe) { Remove-Item $probe -Force }
     if ($r.Code -eq 125 -or $r.Code -eq 126) { Bad "the launcher did not run the command (exit code $($r.Code)): $($r.Err)" }
     else {
-      if ($r.Out -match 'level: S-1-16-4096\b') { Ok "commands run at Low integrity" } else { Bad "the command did not run at Low integrity: $($r.Out) $($r.Err)" }
+      # whoami cannot always read its own groups at Low integrity; the write tests below show the effect either way.
+      if ($r.Out -match 'level: S-1-16-4096\b') { Ok "commands run at Low integrity" }
+      elseif ($r.Out -match 'level: (unknown.*)') { Warn "could not read the integrity level of the command: $($Matches[1])" }
+      else { Bad "the command did not run at Low integrity: $($r.Out) $($r.Err)" }
       if ($r.Out -match 'cache: wrote') { Ok "the command may write to the cache" } else { Bad "the command may not write to its cache: builds will fail" }
       if ($r.Out -match 'outside: denied') { Ok "Windows refuses its writes outside the folder" } else { Bad "the command could write outside the folder" }
       if ($closedFile) { if ($r.Out -match 'secret: denied') { Ok "it cannot read a closed file ($closedFile)" } else { Bad "it could read $closedFile" } }

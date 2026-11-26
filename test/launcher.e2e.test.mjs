@@ -105,7 +105,9 @@ test("doctor.ps1 on an installation in temporary folders", { skip, timeout: 1800
     let r = doctor("-Why", "powershell -File build.ps1")
     const out = r.stdout + r.stderr
     assert.equal(r.status, 0, out)
-    assert.match(out, /ok {4}commands run at Low integrity/)
+    // whoami may fail inside the sandbox on some machines (GitHub runners); then doctor only warns.
+    assert.match(out, /ok {4}commands run at Low integrity|WARN {2}could not read the integrity level/)
+    assert.doesNotMatch(out, /did not run at Low integrity/)
     assert.match(out, /ok {4}the command may write to the cache/)
     assert.match(out, /ok {4}Windows refuses its writes outside the folder/)
     assert.match(out, /ok {4}it cannot read a closed file/)
