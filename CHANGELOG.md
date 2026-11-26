@@ -4,6 +4,8 @@ All notable changes are listed here. The format follows [Keep a Changelog](https
 
 ## Unreleased
 
+- Demo GIF in the README; the link to opencode-sandbox points to the original repository instead of a fork.
+
 ## 0.1.0 - 2026-11-26
 
 - Sandbox plugin: `edit`/`write` only inside the configured folders (links resolved), unknown tools refused, `extraTools` for exceptions.

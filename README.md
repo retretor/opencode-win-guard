@@ -7,6 +7,10 @@
 
 A write sandbox and an emergency stop for [opencode](https://opencode.ai) agents on **Windows**, for letting agents work unattended in a project folder. No administrator rights, no Docker, no WSL, no network access.
 
+![A scripted agent writes outside its folder and is refused by the plugin and by Windows, then reads a key file and stops all agents until the user writes](docs/media/demo.gif)
+
+*A scripted agent against the real plugins and launcher in an isolated `opencode serve`.*
+
 | Part | What it does |
 |---|---|
 | **Sandbox** (`win-guard-sandbox.js` + launcher) | The agents read everything, but write only inside the project folder. For `edit`/`write` the plugin checks the real path (links resolved). For the shell, **Windows itself** refuses every write, delete and rights change outside the folder: commands run with a Low integrity token, and only the project folder and a cache folder carry the Low label. |
@@ -102,7 +106,7 @@ The end-to-end tests work in temporary folders with their own secret file, build
 
 Found in November 2026; none of them sandboxes the shell on Windows or stops a whole session tree:
 
-- [opencode-sandbox](https://github.com/ottnorml/Hamza-Abili_opencode-sandbox): an OS sandbox for the shell with bubblewrap (Linux) and Seatbelt (macOS); native Windows is not supported.
+- [opencode-sandbox](https://github.com/Hamza-Abili/opencode-sandbox): an OS sandbox for the shell with bubblewrap (Linux) and Seatbelt (macOS); native Windows is not supported.
 - [opencode-guard](https://github.com/gigi206/opencode-guard): rule-based deny/ask for tool calls plus an optional decision model, and redaction of secrets before they reach the model.
 - [opencode-hook-safety](https://github.com/MansM/opencode-hook-safety): deny lists for secret paths and destructive commands, optional classifier.
 - [opencode-damage-control](https://github.com/nicounii/opencode-damage-control): blocks 90+ dangerous command patterns, three tiers of path protection.
